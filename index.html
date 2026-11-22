@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGE Capital Structure</title>
+  <meta name="description" content="Capital structure calculator for the AGE case: Campus Deli and Sub Shop, and Firm U and Firm L.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow">FIN 4150 · AGE case</p>
+    <h1>Capital structure calculator</h1>
+    <p class="lede">Reads the case figures from <code>data/</code> and shows what borrowing does to return, risk and share price.</p>
+  </header>
+
+  <main>
+    <p id="status" class="status" role="status">Loading the case data…</p>
+    <div id="warnings"></div>
+
+    <section id="firms" hidden>
+      <h2>Firm U and Firm L <span class="tag">Question c</span></h2>
+      <p class="note" id="firms-note"></p>
+      <div class="firm-grid">
+        <div>
+          <h3>Firm U (no debt)</h3>
+          <table class="statement" id="firm-u"></table>
+        </div>
+        <div>
+          <h3 id="firm-l-title">Firm L</h3>
+          <table class="statement" id="firm-l"></table>
+        </div>
+      </div>
+      <h3>Expected return and risk</h3>
+      <table class="statement" id="firm-stats"></table>
+      <p class="note">Firm U has no interest, so its TIE is shown as n/a. (The case's table prints 0× for Firm U's σ(TIE).)</p>
+    </section>
+
+    <section id="cdss" hidden>
+      <h2>Campus Deli and Sub Shop <span class="tag">Question d</span></h2>
+      <p class="note" id="cdss-note"></p>
+
+      <h3>Case method: buy back at today's <span id="p0"></span></h3>
+      <p class="note">Questions d(3) and d(4). Shares repurchased = D / P₀. EPS = net income / shares remaining. Price = EPS / r<sub>s</sub>. WACC uses book weights (the AGE solution's method for d(7)).</p>
+      <table class="results" id="case-table"></table>
+
+      <h3>New-price method: buy back at the price after the announcement</h3>
+      <p class="note">Value of equity S = net income / r<sub>s</sub>. Value of the firm V = S + D. Price = V / shares before the buyback. Shares repurchased = D / price. WACC uses market weights.</p>
+      <table class="results" id="new-table"></table>
+
+      <h3>What each method picks</h3>
+      <ul id="summary" class="summary"></ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Runs entirely in your browser. It reads only the files in this site's <code>data/</code> folder and sends nothing anywhere.</p>
+  </footer>
+
+  <script src="capstruct.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
