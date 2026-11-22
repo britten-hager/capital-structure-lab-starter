@@ -98,6 +98,43 @@ tr.best td, tr.best th { background: var(--best-bg); }
   .results tr td:last-child { border-bottom: 0; }
 }
 
+/* ---------- Levers ---------- */
+.lever {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  background: var(--bg);
+}
+.lever label { display: block; font-size: 1.05rem; }
+.lever input[type="range"] { width: 100%; margin: 10px 0 4px; accent-color: var(--accent); height: 28px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+button:hover { background: var(--accent-soft); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pick-note:empty { display: none; }
+.pick-note { color: var(--text); }
+.compare { margin-top: 8px; }
+.compare td { white-space: normal; }
+.compare .flag { display: block; font-size: 0.8rem; color: var(--muted); }
+.compare .flag.warn { color: var(--accent); font-weight: 600; }
+tr.selected th, tr.selected td { box-shadow: inset 0 2px 0 var(--accent), inset 0 -2px 0 var(--accent); }
+@media (max-width: 720px) {
+  .results tr.selected { border: 2px solid var(--accent); box-shadow: none; }
+  .results tr.selected th, .results tr.selected td { box-shadow: none; }
+  .compare th, .compare td { padding: 6px 4px; font-size: 0.92rem; }
+}
+
 .summary { padding-left: 20px; margin: 4px 0; }
 .summary li { margin: 4px 0; }
 

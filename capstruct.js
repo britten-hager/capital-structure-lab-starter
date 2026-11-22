@@ -158,14 +158,18 @@
         sales: s.sales,
         operatingCosts: s.operatingCosts,
         ebit, interest, ebt, taxes, netIncome,
-        roe: netIncome / equity,
+        roe: equity > 0 ? netIncome / equity : null,
         tie: interest > 0 ? ebit / interest : null,
       };
     });
     const p = years.map((y) => y.probability);
-    const roe = years.map((y) => y.roe);
-    const eRoe = expected(roe, p);
-    const sdRoe = stdDev(roe, p);
+    let eRoe = null, sdRoe = null, cvRoe = null;
+    if (equity > 0) {
+      const roe = years.map((y) => y.roe);
+      eRoe = expected(roe, p);
+      sdRoe = stdDev(roe, p);
+      cvRoe = sdRoe / eRoe;
+    }
     let eTie = null, sdTie = null, cvTie = null;
     if (interest > 0) {
       const tie = years.map((y) => y.tie);
@@ -175,7 +179,7 @@
     }
     return {
       assets: totalAssets, debt, equity, interestRate, years,
-      eRoe, sdRoe, cvRoe: sdRoe / eRoe,
+      eRoe, sdRoe, cvRoe,
       eTie, sdTie, cvTie,
     };
   }
@@ -274,6 +278,16 @@
     };
   }
 
+  // Where the Best price ('price') or Highest EPS ('eps') button moves the
+  // CDSS slider. If both buyback methods pick the same debt, go there. If not,
+  // go to the case method's pick and report both, so the page can say so.
+  function buttonTarget(rows, what) {
+    const s = cdssSummary(rows);
+    const caseDebt = what === 'eps' ? s.highestCaseEps : s.bestCasePrice;
+    const newDebt = what === 'eps' ? s.highestNewEps : s.bestNewPrice;
+    return { debt: caseDebt, caseDebt, newDebt, agree: caseDebt === newDebt };
+  }
+
   // Checks that should always pass with the case data. Each returns
   // { ok, message } so the page can show a warning instead of hiding a failure.
   function cdssChecks(c, rows) {
@@ -329,7 +343,7 @@
     parseCSV, num,
     cdssInputs, assumptionInputs, scheduleInputs, exampleInputs, scenarioInputs,
     expected, stdDev, exampleFirm,
-    cdssEbit, managementStake, cdssRow, cdssTable, cdssSummary, cdssChecks,
+    cdssEbit, managementStake, cdssRow, cdssTable, cdssSummary, buttonTarget, cdssChecks,
     round, fmtDollars, fmtCost, fmtCents, fmtPct, fmtMult, fmtNum,
   };
 

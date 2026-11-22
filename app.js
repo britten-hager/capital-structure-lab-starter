@@ -101,11 +101,50 @@
       el('th', { scope: 'col' }, ['Debt']),
       ...cols.map(([label]) => el('th', { scope: 'col' }, [label])),
     ])]);
-    const body = el('tbody', {}, rows.map((r) => el('tr', r.debt === best ? { class: 'best' } : {}, [
+    const body = el('tbody', {}, rows.map((r) => el('tr', Object.assign({ 'data-debt': String(r.debt) }, r.debt === best ? { class: 'best' } : {}), [
       el('th', { scope: 'row' }, [C.fmtDollars(r.debt) + (r.debt === best ? ' · highest price' : '')]),
       ...cols.map(([label, fn]) => el('td', { 'data-label': label }, [fn(r)])),
     ])));
     table.replaceChildren(head, body);
+  }
+
+  // Management's stake, with the two special cases CLAUDE.md asks for.
+  function stakeCell(m) {
+    if (m.status === 'oversold') {
+      return el('td', {}, ['n/a', el('span', { class: 'flag warn' }, ['Warning: the buyback needs more shares than outside investors own, so management would have to sell.'])]);
+    }
+    if (m.status === 'all') {
+      return el('td', {}, [C.fmtPct(1), el('span', { class: 'flag' }, ['No outside shareholders would be left.'])]);
+    }
+    return el('td', {}, [C.fmtPct(m.stake)]);
+  }
+
+  // The side-by-side panel under the CDSS slider.
+  function renderCompare(table, r) {
+    const a = r.caseMethod;
+    const b = r.newPrice;
+    const line = (label, fa, fb) => el('tr', {}, [
+      el('th', { scope: 'row' }, [label]),
+      typeof fa === 'string' ? el('td', {}, [fa]) : fa,
+      typeof fb === 'string' ? el('td', {}, [fb]) : fb,
+    ]);
+    table.replaceChildren(
+      el('thead', {}, [el('tr', {}, [
+        el('th', { scope: 'col' }, ['']),
+        el('th', { scope: 'col' }, ['$20 buyback (case)']),
+        el('th', { scope: 'col' }, ['New-price buyback']),
+      ])]),
+      el('tbody', {}, [
+        line('Share price', C.fmtCents(a.price), C.fmtCents(b.price)),
+        line('Shares repurchased', C.fmtNum(a.repurchased, 2), C.fmtNum(b.repurchased, 2)),
+        line('Shares remaining', C.fmtNum(a.remaining, 2), C.fmtNum(b.remaining, 2)),
+        line('EPS', C.fmtCents(a.eps), C.fmtCents(b.eps)),
+        line('Dividends per share', C.fmtCents(a.dps), C.fmtCents(b.dps)),
+        line('TIE', C.fmtMult(r.tie), C.fmtMult(r.tie)),
+        line('WACC', C.fmtPct(a.wacc) + ' (book weights)', C.fmtPct(b.wacc) + ' (market weights)'),
+        line("Management's share", stakeCell(a.management), stakeCell(b.management)),
+      ]),
+    );
   }
 
   function renderSummary(list, s) {
@@ -141,15 +180,36 @@
 
       // Firm U and Firm L
       const u = C.exampleFirm(ex.totalAssets, 0, ex.interestRate, T, scenarios);
-      const l = C.exampleFirm(ex.totalAssets, ex.firmLDebt, ex.interestRate, T, scenarios);
       document.getElementById('firms-note').textContent =
         'Both firms have ' + C.fmtDollars(ex.totalAssets) + ' of assets and a ' + C.fmtPct(T) +
         ' tax rate. Firm L has ' + C.fmtDollars(ex.firmLDebt) + ' of debt at ' + C.fmtPct(ex.interestRate) +
         '. Each column is one kind of year, with its probability.';
-      document.getElementById('firm-l-title').textContent = 'Firm L (' + C.fmtDollars(ex.firmLDebt) + ' of debt)';
       renderStatement(document.getElementById('firm-u'), u);
-      renderStatement(document.getElementById('firm-l'), l);
-      renderFirmStats(document.getElementById('firm-stats'), u, l);
+
+      // Firm L slider: 0 to slider_max in steps of slider_step, rate held at 12%.
+      const lSlider = document.getElementById('firm-l-debt');
+      lSlider.max = String(ex.sliderMax);
+      lSlider.step = String(ex.sliderStep);
+      lSlider.value = String(ex.firmLDebt);
+      document.getElementById('firm-l-rate-note').textContent =
+        'The interest rate is held at ' + C.fmtPct(ex.interestRate) +
+        ' at every amount, so the slider shows what debt does to Firm L\'s return and risk, not how lenders would respond. ' +
+        'Case sets it back to the case\'s ' + C.fmtDollars(ex.firmLDebt) + '.';
+      const showFirmL = () => {
+        const debt = Number(lSlider.value);
+        const l = C.exampleFirm(ex.totalAssets, debt, ex.interestRate, T, scenarios);
+        document.getElementById('firm-l-debt-out').textContent = C.fmtDollars(debt);
+        lSlider.setAttribute('aria-valuetext', C.fmtDollars(debt));
+        document.getElementById('firm-l-title').textContent = 'Firm L (' + C.fmtDollars(debt) + ' of debt)';
+        renderStatement(document.getElementById('firm-l'), l);
+        renderFirmStats(document.getElementById('firm-stats'), u, l);
+      };
+      lSlider.addEventListener('input', showFirmL);
+      document.getElementById('btn-case').addEventListener('click', () => {
+        lSlider.value = String(ex.firmLDebt);
+        showFirmL();
+      });
+      showFirmL();
 
       // CDSS
       const rows = C.cdssTable(cdss, T, schedule);
@@ -164,6 +224,36 @@
       renderResults(document.getElementById('case-table'), rows, 'caseMethod', 'WACC (book weights)', summary.bestCasePrice);
       renderResults(document.getElementById('new-table'), rows, 'newPrice', 'WACC (market weights)', summary.bestNewPrice);
       renderSummary(document.getElementById('summary'), summary);
+
+      // CDSS slider: one stop per row of the banker's schedule, nothing in between.
+      const slider = document.getElementById('cdss-debt');
+      const pickNote = document.getElementById('pick-note');
+      slider.max = String(rows.length - 1);
+      const showCdss = () => {
+        const r = rows[Number(slider.value)];
+        document.getElementById('cdss-debt-out').textContent = C.fmtDollars(r.debt);
+        slider.setAttribute('aria-valuetext', C.fmtDollars(r.debt));
+        document.getElementById('cdss-rates').textContent =
+          'Banker\'s rates here: r_d = ' + (r.rd === null ? 'n/a (no debt)' : C.fmtPct(r.rd)) + ', r_s = ' + C.fmtPct(r.rs) + '.';
+        renderCompare(document.getElementById('cdss-compare'), r);
+        document.querySelectorAll('.results tr[data-debt]').forEach((tr) => {
+          tr.classList.toggle('selected', Number(tr.dataset.debt) === r.debt);
+        });
+      };
+      const goTo = (what) => {
+        const t = C.buttonTarget(rows, what);
+        slider.value = String(rows.findIndex((r) => r.debt === t.debt));
+        const name = what === 'eps' ? 'Highest EPS' : 'Highest share price';
+        pickNote.textContent = t.agree
+          ? name + ': ' + C.fmtDollars(t.debt) + ' under both buyback methods.'
+          : name + ': ' + C.fmtDollars(t.caseDebt) + ' with the $20 buyback, but ' + C.fmtDollars(t.newDebt) +
+            ' with the new-price buyback. The slider shows the case method\'s amount.';
+        showCdss();
+      };
+      slider.addEventListener('input', () => { pickNote.textContent = ''; showCdss(); });
+      document.getElementById('btn-best').addEventListener('click', () => goTo('price'));
+      document.getElementById('btn-eps').addEventListener('click', () => goTo('eps'));
+      showCdss();
 
       C.cdssChecks(cdss, rows).filter((c) => !c.ok).forEach((c) => showWarning('Check failed: ' + c.message));
 
