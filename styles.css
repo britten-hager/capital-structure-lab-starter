@@ -1,0 +1,141 @@
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --text: #1d2228;
+  --muted: #5b6570;
+  --line: #dcd9d0;
+  --accent: #b3261e;      /* Utah Tech red */
+  --accent-soft: #f6e3e1;
+  --warn-bg: #fff4d6;
+  --warn-line: #e0b84a;
+  --best-bg: #e6f2ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15181c;
+    --surface: #1e2227;
+    --text: #e8e6e1;
+    --muted: #a2abb5;
+    --line: #353b42;
+    --accent: #ef8a82;
+    --accent-soft: #3a2422;
+    --warn-bg: #3a3017;
+    --warn-line: #8a6d1f;
+    --best-bg: #1f3327;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.site-header, main, .site-footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.site-header { padding-top: 24px; }
+.eyebrow { margin: 0; color: var(--accent); font-weight: 600; font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; }
+h1 { margin: 4px 0 8px; font-size: 1.6rem; line-height: 1.2; }
+.lede { margin: 0 0 16px; color: var(--muted); }
+h2 { font-size: 1.3rem; margin: 32px 0 8px; }
+h3 { font-size: 1.05rem; margin: 24px 0 6px; }
+.tag { font-size: 0.75rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.note { color: var(--muted); font-size: 0.9rem; margin: 4px 0 8px; }
+code { font-size: 0.9em; }
+
+section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 4px 16px 16px;
+  margin: 16px 0;
+}
+
+.status { color: var(--muted); }
+.warning {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 12px 0;
+}
+
+/* ---------- Tables ---------- */
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); }
+thead th { font-size: 0.85rem; color: var(--muted); font-weight: 600; vertical-align: bottom; }
+td { text-align: right; white-space: nowrap; }
+th[scope="row"] { text-align: left; font-weight: 500; }
+tr.total td, tr.total th { font-weight: 700; }
+tr.best td, tr.best th { background: var(--best-bg); }
+
+.firm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 720px) {
+  .firm-grid { grid-template-columns: 1fr; }
+  .statement { font-size: 0.9rem; }
+  .statement th, .statement td { padding: 5px 4px; }
+
+  /* Each debt level becomes a card of label / value pairs, so the wide
+     CDSS tables fit a 375-pixel phone without sideways scrolling. */
+  .results thead { display: none; }
+  .results, .results tbody, .results tr, .results td, .results th { display: block; width: 100%; }
+  .results tr { border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; overflow: hidden; }
+  .results th[scope="row"] { background: var(--accent-soft); border-bottom: 1px solid var(--line); font-weight: 700; }
+  .results td { display: flex; justify-content: space-between; gap: 12px; text-align: right; }
+  .results td::before { content: attr(data-label); color: var(--muted); text-align: left; white-space: normal; }
+  .results tr td:last-child { border-bottom: 0; }
+}
+
+/* ---------- Levers ---------- */
+.lever {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  background: var(--bg);
+}
+.lever label { display: block; font-size: 1.05rem; }
+.lever input[type="range"] { width: 100%; margin: 10px 0 4px; accent-color: var(--accent); height: 28px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 16px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+button:hover { background: var(--accent-soft); }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pick-note:empty { display: none; }
+.pick-note { color: var(--text); }
+.compare { margin-top: 8px; }
+.compare td { white-space: normal; }
+.compare .flag { display: block; font-size: 0.8rem; color: var(--muted); }
+.compare .flag.warn { color: var(--accent); font-weight: 600; }
+tr.selected th, tr.selected td { box-shadow: inset 0 2px 0 var(--accent), inset 0 -2px 0 var(--accent); }
+@media (max-width: 720px) {
+  .results tr.selected { border: 2px solid var(--accent); box-shadow: none; }
+  .results tr.selected th, .results tr.selected td { box-shadow: none; }
+  .compare th, .compare td { padding: 6px 4px; font-size: 0.92rem; }
+}
+
+.summary { padding-left: 20px; margin: 4px 0; }
+.summary li { margin: 4px 0; }
+
+.site-footer { color: var(--muted); font-size: 0.85rem; padding-bottom: 32px; }
